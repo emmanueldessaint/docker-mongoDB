@@ -1,24 +1,62 @@
+const mongoose = require('mongoose');
+
+// Définition du schéma directement ici
+const pizzaOrderSchema = new mongoose.Schema({
+  name: String,
+  size: String,
+  price: Number,
+  quantity: Number,
+  date: Date,
+});
+
+
+const PizzaOrder = mongoose.model('PizzaOrder', pizzaOrderSchema);
+
 class OrderService {
-    constructor(database) {
-        this.ordersCollection = database.collection('orders');
-    }
+  constructor(dbClient) {
+    this.dbClient = dbClient; 
+  }
 
-    async getOrders() {
-        // Logique pour récupérer toutes les commandes
-    }
+  async calculateMediumPizzasByRecipe() {
+    const pipeline = [
+      {
+        $match: { size: "medium" }
+      },
+      {
+        $group: {
+          _id: "$name",
+          totalQuantity: { $sum: "$quantity" }
+        }
+      }
+    ];
 
-    async getOrdersByPizza(pizzaName) {
-        // Logique pour récupérer les commandes filtrées par recette de pizza
+    try {
+      const result = await this.dbClient.collection('pizza_orders').aggregate(pipeline).toArray();
+      return result;
+    } catch (error) {
+      console.error("Error calculating medium pizzas by recipe:", error);
+      throw error;
     }
+  }
 
-    async getOrdersBySize(size) {
-        // Logique pour récupérer les commandes filtrées par format
-    }
+  async calculateAveragePizzaQuantity() {
+    const pipeline = [
+      {
+        $group: {
+          _id: null,
+          averageQuantity: { $avg: "$quantity" }
+        }
+      }
+    ];
 
-    // Méthode optionnelle pour implémenter des filtres multiples
-    async getOrdersWithFilters(filters) {
-        // Logique pour récupérer les commandes avec des filtres multiples
+    try {
+      const result = await this.dbClient.collection('pizza_orders').aggregate(pipeline).toArray();
+      return result[0].averageQuantity; // Assuming there's only one result
+    } catch (error) {
+      console.error("Error calculating average pizza quantity:", error);
+      throw error;
     }
+  }
 }
 
 module.exports = OrderService;

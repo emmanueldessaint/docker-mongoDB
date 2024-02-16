@@ -1,6 +1,8 @@
+require('dotenv').config(); // Pour charger les variables d'environnement depuis le fichier .env
 const mongoose = require('mongoose');
+const OrderService = require('./order-service');
 
-const dbURI = 'mongodb://localhost:27017/pizzas_orders_db';
+const dbURI = process.env.DB_URI;
 
 mongoose.connect(dbURI, {
   useNewUrlParser: true,
